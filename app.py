@@ -10,6 +10,7 @@ import numpy as np
 from dotenv import load_dotenv
 
 
+
 load_dotenv()
 
 env_jwt_key = os.getenv("JWT_SECRET_KEY")
@@ -26,7 +27,7 @@ jwt = JWTManager(app)
 
 chronotype_model = keras.models.load_model(env_chronotype_model)
 chronotype_scaler = joblib.load(env_chronotype_scaler)
-chronotype_label_encoder = joblib.load(env_chronotype_scaler)
+chronotype_label_encoder = joblib.load(env_chronotype_label_encoder)
 sleep_model = keras.models.load_model(env_sleep_model,custom_objects={'mse': 'mse'})
 sleep_scaler = joblib.load(env_sleep_scaler)
 
@@ -96,7 +97,7 @@ def format_duration(hours):
 #   "wakeup_hour": 5
 # }
 @app.route('/chronotype', methods=['POST'])
-@jwt_required()
+# @jwt_required()
 def chronotype_classification():
     try:
         data = request.get_json()
@@ -138,7 +139,7 @@ def chronotype_classification():
 #   "chronotype": 2
 # }
 @app.route('/sleep', methods=['POST'])
-@jwt_required()
+# @jwt_required()
 def sleep_recommendation():
     try:
         data = request.get_json()
