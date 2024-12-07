@@ -1,4 +1,5 @@
 import os
+import mysql.connector
 from flask import Flask, request, jsonify
 from flask_jwt_extended import JWTManager, jwt_required
 from flask_jwt_extended.exceptions import NoAuthorizationError, InvalidHeaderError
@@ -8,8 +9,6 @@ from tensorflow import keras
 import joblib
 import numpy as np
 from dotenv import load_dotenv
-
-
 
 load_dotenv()
 
@@ -51,6 +50,17 @@ def handle_invalid_token_error(e):
 def handle_decode_error(e):
     return jsonify({'success': False, 'message': 'Invalid token'}), 422
 
+mydb = mysql.connector.connect(
+    host="http://34.50.69.77/",
+    user="myuser",
+    password="saljusemihujan"
+)
+
+mycursor = mydb.cursor() 
+
+mycursor.execute("SELECT * FROM history")
+
+myresult = mycursor.fetchall()
 
 def validate_chronotype(data):
     if not isinstance(data, dict):
@@ -59,8 +69,9 @@ def validate_chronotype(data):
     if 'bedtime_hour' not in data or 'wakeup_hour' not in data:
         return False, "Bedtime_Hour dan Wakeup_Hour wajib ada."
     
-    bedtime_hour = data.get('bedtime_hour')
-    wakeup_hour = data.get('wakeup_hour')
+    for row in myresult:
+        bedtime_hour = data.get(row[0])
+        wakeup_hour = data.get(row[1])
 
     if not isinstance(bedtime_hour, int) or not 0 <= bedtime_hour <= 23:
         return False, "Bedtime_Hour harus berupa integer antara 0 dan 23."
