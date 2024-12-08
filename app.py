@@ -50,18 +50,6 @@ def handle_invalid_token_error(e):
 def handle_decode_error(e):
     return jsonify({'success': False, 'message': 'Invalid token'}), 422
 
-mydb = mysql.connector.connect(
-    host="http://34.50.69.77/",
-    user="myuser",
-    password="saljusemihujan"
-)
-
-mycursor = mydb.cursor() 
-
-mycursor.execute("SELECT * FROM history")
-
-myresult = mycursor.fetchall()
-
 def validate_chronotype(data):
     if not isinstance(data, dict):
         return False, "Input harus berupa objek JSON."
@@ -70,8 +58,8 @@ def validate_chronotype(data):
         return False, "Bedtime_Hour dan Wakeup_Hour wajib ada."
     
     for row in myresult:
-        bedtime_hour = data.get(row[0])
-        wakeup_hour = data.get(row[1])
+        bedtime_hour = data.get('bedtime_hour')
+        wakeup_hour = data.get('wakeup_hour')
 
     if not isinstance(bedtime_hour, int) or not 0 <= bedtime_hour <= 23:
         return False, "Bedtime_Hour harus berupa integer antara 0 dan 23."
