@@ -1,17 +1,15 @@
 import os
-import mysql.connector
 from flask import Flask, request, jsonify
-from flask_jwt_extended import JWTManager, jwt_required
-from flask_jwt_extended.exceptions import NoAuthorizationError, InvalidHeaderError
-from jwt.exceptions import InvalidTokenError, DecodeError
 import pandas as pd
 from tensorflow import keras
 import joblib
 import numpy as np
 from dotenv import load_dotenv
 
-load_dotenv()
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
+
+load_dotenv()
 env_jwt_key = os.getenv("JWT_SECRET_KEY")
 env_chronotype_model = os.getenv("CHRONOTYPE_MODEL")
 env_chronotype_scaler = os.getenv("CHRONOTYPE_SCALER")
@@ -21,8 +19,7 @@ env_sleep_scaler = os.getenv("SLEEP_SCALER")
 
 
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = env_jwt_key
-jwt = JWTManager(app)
+
 
 chronotype_model = keras.models.load_model(env_chronotype_model)
 chronotype_scaler = joblib.load(env_chronotype_scaler)
@@ -31,25 +28,6 @@ sleep_model = keras.models.load_model(env_sleep_model,custom_objects={'mse': 'ms
 sleep_scaler = joblib.load(env_sleep_scaler)
 
 
-@app.errorhandler(NoAuthorizationError)
-def handle_auth_error(e):
-    return jsonify({'success': False, 'message': 'Missing Authorization Header'}), 401
-
-
-@app.errorhandler(InvalidHeaderError)
-def handle_invalid_header_error(e):
-    return jsonify({'success': False, 'message': str(e)}), 422
-
-
-@app.errorhandler(InvalidTokenError)
-def handle_invalid_token_error(e):
-    return jsonify({'success': False, 'message': str(e)}), 422
-
-
-@app.errorhandler(DecodeError)
-def handle_decode_error(e):
-    return jsonify({'success': False, 'message': 'Invalid token'}), 422
-
 def validate_chronotype(data):
     if not isinstance(data, dict):
         return False, "Input harus berupa objek JSON."
@@ -57,9 +35,8 @@ def validate_chronotype(data):
     if 'bedtime_hour' not in data or 'wakeup_hour' not in data:
         return False, "Bedtime_Hour dan Wakeup_Hour wajib ada."
     
-    for row in myresult:
-        bedtime_hour = data.get('bedtime_hour')
-        wakeup_hour = data.get('wakeup_hour')
+    bedtime_hour = data['bedtime_hour']
+    wakeup_hour = data['wakeup_hour']
 
     if not isinstance(bedtime_hour, int) or not 0 <= bedtime_hour <= 23:
         return False, "Bedtime_Hour harus berupa integer antara 0 dan 23."
@@ -88,15 +65,7 @@ def format_duration(hours):
     return f"{hours:02}:{minutes:02}"
 
 
-# Sample input
-# Header (Authorization): Bearer <your_token>
-# 
-# {
-#   "bedtime_hour": 23,
-#   "wakeup_hour": 5
-# }
 @app.route('/chronotype', methods=['POST'])
-# @jwt_required()
 def chronotype_classification():
     try:
         data = request.get_json()
@@ -127,18 +96,7 @@ def chronotype_classification():
         }), 500
 
 
-# Sample input
-# Header (Authorization): Bearer <your_token>
-# 
-# {
-#   "daily_steps": 0.6175167881125876,
-#   "physical_activity_level": 70,
-#   "age": 25,
-#   "gender": 1,
-#   "chronotype": 2
-# }
 @app.route('/sleep', methods=['POST'])
-# @jwt_required()
 def sleep_recommendation():
     try:
         data = request.get_json()
@@ -178,4 +136,4 @@ def sleep_recommendation():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=3000)
+    app.run(debug=True, port=5000)

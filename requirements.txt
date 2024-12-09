@@ -4,4 +4,4 @@ tensorflow
 scikit-learn
 numpy
 python-dotenv
-Flask-JWT-Extended
+gunicorn
